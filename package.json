@@ -1,0 +1,25 @@
+{
+  "name": "fur-buddy-reminder",
+  "version": "1.0.0",
+  "description": "Fur Buddy Reminder is a LINE chatbot designed to help pet owners remember important care activities for their pets. It enables users to set up monthly and single-event reminders for tasks like medication, grooming appointments, and more, ensuring your furry friends are well taken care of.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "darrenjon",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.1.1",
+    "nodemon": "^3.1.0"
+  }
+}
