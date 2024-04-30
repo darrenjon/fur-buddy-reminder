@@ -5,12 +5,13 @@ const line = require("@line/bot-sdk");
 
 // create LINE SDK config from env variables
 const config = {
-  channelSecret: process.env.CHANNEL_SECRET
+  channelSecret: process.env.CHANNEL_SECRET,
+  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN
 };
 
 // create LINE SDK client
 const client = new line.messagingApi.MessagingApiClient({
-  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN
+  channelAccessToken: config.channelAccessToken
 });
 
 // create Express app
@@ -34,18 +35,21 @@ app.get("/", (req, res) => {
 
 // event handler
 function handleEvent (event) {
-  if (event.type !== "message" || event.message.type !== "text") {
-    // ignore non-text-message event
+  if (event.type !== "message" || (event.message.type !== "text" && event.message.type !== "sticker")) {
     return Promise.resolve(null);
   }
 
-  // create an echoing text message
-  const echo = { type: "text", text: event.message.text };
+  console.log("User ID:", event.source.userId);
+  console.log("Event:", event);
+  const remindedMsg = {
+    type: "text",
+    text: `Hi Darren Lin 提醒你～就是今天 ${new Date().getFullYear()}/${String(new Date().getMonth() + 1).padStart(2, "0")}/${String(new Date().getDate()).padStart(2, "0")} ，要記得給 Emma 吃 寵愛食剋3號 (>10- 20公斤狗狗使用) ，有效預防體外寄生蟲喔！`
+  };
 
   // use reply API
   return client.replyMessage({
     replyToken: event.replyToken,
-    messages: [echo]
+    messages: [remindedMsg]
   });
 }
 
