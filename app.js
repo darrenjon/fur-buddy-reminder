@@ -69,23 +69,37 @@ async function handleEvent (event) {
 }
 
 // set schedule to send reminder
-async function sendReminder () {
+async function sendReminder (messageText) {
   const userId = process.env.USER_ID;
   const userName = await getUserName(userId);
-  const message = {
+  const reminder = {
     type: "text",
-    text: `Hi ${userName} 提醒你～就是今天 ${dayjs().format("YYYY/MM/DD")} ，要記得給 Emma 吃 寵愛食剋3號 (>10- 20公斤狗狗使用) ，有效預防體外寄生蟲喔！`
+    text: `Hi ${userName} 提醒你～就是今天 ${dayjs().format("YYYY/MM/DD")}, ${messageText}`
   };
 
   client.pushMessage({
     to: userId,
-    messages: [message]
+    messages: [reminder]
   })
     .then(() => console.log("Reminder sent successfully!"))
     .catch(err => console.error("Failed to send reminder:", err));
 }
 
-schedule.scheduleJob("*/10 * * * *", sendReminder);
+async function sendMedicineReminder () {
+  const messageText = "要記得給 Emma 吃 寵愛食剋3號 (>10- 20公斤狗狗使用), 有效預防體外寄生蟲喔！";
+  sendReminder(messageText);
+}
+
+async function sendGroomingReminder () {
+  const messageText = "要記得預約 Emma 的美容時間喔！";
+  sendReminder(messageText);
+}
+
+// schedule medicine reminder at 10:00 AM on the 20th of every month
+schedule.scheduleJob("0 10 20 * *", sendMedicineReminder);
+
+// schedule grooming reminder at 10:00 AM every 15 days
+schedule.scheduleJob("0 10 */15 * *", sendGroomingReminder);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
