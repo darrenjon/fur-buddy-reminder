@@ -19,24 +19,7 @@ const client = new line.messagingApi.MessagingApiClient({
 // create Express app
 const app = express();
 
-// set schedule to send reminder
-function sendReminder () {
-  const userId = process.env.USER_ID;
-  const message = {
-    type: "text",
-    text: `Hi Darren Lin 提醒你～就是今天 ${dayjs().format("YYYY/MM/DD")} ，要記得給 Emma 吃 寵愛食剋3號 (>10- 20公斤狗狗使用) ，有效預防體外寄生蟲喔！`
-  };
-
-  client.pushMessage({
-    to: userId,
-    messages: [message]
-  })
-    .then(() => console.log("Reminder sent successfully!"))
-    .catch(err => console.error("Failed to send reminder:", err));
-}
-
 // register a webhook handler with middleware
-// about the middleware, please refer to doc
 app.post("/callback", line.middleware(config), (req, res) => {
   Promise
     .all(req.body.events.map(handleEvent))
@@ -51,24 +34,55 @@ app.get("/", (req, res) => {
   res.json({ message: "ok" });
 });
 
+// get user name
+async function getUserName (userId) {
+  const profile = await client.getProfile(userId);
+  return profile.displayName;
+}
+
 // event handler
-function handleEvent (event) {
+async function handleEvent (event) {
   if (event.type !== "message" || (event.message.type !== "text" && event.message.type !== "sticker")) {
     return Promise.resolve(null);
   }
 
-  console.log("User ID:", event.source.userId);
-  console.log("Event:", event);
-  const remindedMsg = {
+  const userName = await getUserName(event.source.userId);
+
+  const greetings = [
+    `Hello ${userName}! Ready to take the best care of your furry friend today?`,
+    `Hi ${userName}! Let's ensure your pet gets all the care they need today.`,
+    `Greetings ${userName}! Let's make today a great day for your pet.`,
+    `Hey ${userName}! Let's keep your fur buddy happy and healthy today.`
+  ];
+  const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+
+  const greetingMsg = {
     type: "text",
-    text: `Hi Darren Lin 提醒你～就是今天 ${dayjs().format("YYYY/MM/DD")} ，要記得給 Emma 吃 寵愛食剋3號 (>10- 20公斤狗狗使用) ，有效預防體外寄生蟲喔！`
+    text: randomGreeting
   };
 
   // use reply API
   return client.replyMessage({
     replyToken: event.replyToken,
-    messages: [remindedMsg]
+    messages: [greetingMsg]
   });
+}
+
+// set schedule to send reminder
+async function sendReminder () {
+  const userId = process.env.USER_ID;
+  const userName = await getUserName(userId);
+  const message = {
+    type: "text",
+    text: `Hi ${userName} 提醒你～就是今天 ${dayjs().format("YYYY/MM/DD")} ，要記得給 Emma 吃 寵愛食剋3號 (>10- 20公斤狗狗使用) ，有效預防體外寄生蟲喔！`
+  };
+
+  client.pushMessage({
+    to: userId,
+    messages: [message]
+  })
+    .then(() => console.log("Reminder sent successfully!"))
+    .catch(err => console.error("Failed to send reminder:", err));
 }
 
 schedule.scheduleJob("*/10 * * * *", sendReminder);
