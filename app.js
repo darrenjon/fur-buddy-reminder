@@ -2,6 +2,8 @@
 
 const express = require("express");
 const line = require("@line/bot-sdk");
+const schedule = require("node-schedule");
+const dayjs = require("dayjs");
 
 // create LINE SDK config from env variables
 const config = {
@@ -16,6 +18,22 @@ const client = new line.messagingApi.MessagingApiClient({
 
 // create Express app
 const app = express();
+
+// set schedule to send reminder
+function sendReminder () {
+  const userId = process.env.USER_ID;
+  const message = {
+    type: "text",
+    text: `Hi Darren Lin 提醒你～就是今天 ${dayjs().format("YYYY/MM/DD")} ，要記得給 Emma 吃 寵愛食剋3號 (>10- 20公斤狗狗使用) ，有效預防體外寄生蟲喔！`
+  };
+
+  client.pushMessage({
+    to: userId,
+    messages: [message]
+  })
+    .then(() => console.log("Reminder sent successfully!"))
+    .catch(err => console.error("Failed to send reminder:", err));
+}
 
 // register a webhook handler with middleware
 // about the middleware, please refer to doc
@@ -43,7 +61,7 @@ function handleEvent (event) {
   console.log("Event:", event);
   const remindedMsg = {
     type: "text",
-    text: `Hi Darren Lin 提醒你～就是今天 ${new Date().getFullYear()}/${String(new Date().getMonth() + 1).padStart(2, "0")}/${String(new Date().getDate()).padStart(2, "0")} ，要記得給 Emma 吃 寵愛食剋3號 (>10- 20公斤狗狗使用) ，有效預防體外寄生蟲喔！`
+    text: `Hi Darren Lin 提醒你～就是今天 ${dayjs().format("YYYY/MM/DD")} ，要記得給 Emma 吃 寵愛食剋3號 (>10- 20公斤狗狗使用) ，有效預防體外寄生蟲喔！`
   };
 
   // use reply API
@@ -52,6 +70,8 @@ function handleEvent (event) {
     messages: [remindedMsg]
   });
 }
+
+schedule.scheduleJob("*/10 * * * *", sendReminder);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
